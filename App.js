@@ -8,7 +8,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
+import MovieItem from './MovieItem';
 
 // --- Configuração da API e Tema ---
 const API_KEY = 'fc65584349fcc4f6dd8b6bacbdce6b83';
@@ -24,17 +24,13 @@ const TEXT_GRAY = '#999';
 // --- Componente Principal ---
 const App = () => {
   // --- Estados ---
-  // useState para guardar a lista de filmes
   const [movies, setMovies] = useState([]);
-  // useState para controlar o indicador de "carregando"
   const [loading, setLoading] = useState(true);
 
   // --- Funções ---
-  // Função que busca os dados na API
   const fetchMovies = async () => {
     setLoading(true);
     try {
-      // Montando a URL: filmes populares, com nossa chave, em português
       const url = `${API_URL}/movie/popular?api_key=${API_KEY}&language=${LANGUAGE}&page=1`;
       
       const response = await fetch(url);
@@ -77,14 +73,11 @@ const App = () => {
       </View>
 
       {/* Lista de Filmes */}
-      <FlatList
-        data={movies}
+   <FlatList
+        data={movies} 
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.movieItem}>
-            <Text style={styles.movieTitle}>{item.title}</Text>
-          </View>
-        )}
+        renderItem={({ item }) => <MovieItem movie={item} />}
+        contentContainerStyle={styles.listContainer}
       />
     </SafeAreaView>
   );
@@ -116,15 +109,9 @@ const styles = StyleSheet.create({
     color: TEXT_WHITE,
     textAlign: 'center',
   },
-  movieItem: {
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#222',
-  },
-  movieTitle: {
-    fontSize: 18,
-    color: TEXT_WHITE,
+ listContainer: {
+    paddingHorizontal: 15,
+    paddingTop: 10,
   },
 });
 
