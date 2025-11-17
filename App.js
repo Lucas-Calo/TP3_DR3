@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   StatusBar,
   TextInput,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MovieItem from './MovieItem';
@@ -20,7 +21,7 @@ const COLOUR_BACKGROUND = '#141414';
 const COLOUR_RED = '#E50914';
 const TEXT_WHITE = '#FFFFFF';
 const TEXT_GRAY = '#999';
-const INPUT_BACKGROUND = '333';
+const INPUT_BACKGROUND = '#333';
 
 // Componente Principal:
 const App = () => {
@@ -37,10 +38,15 @@ const App = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
 
+
+  // Estado para Tratamento de Erros:
+  const [error, setError] = useState(null);
+
   // Funções:
 
   const fetchMovies = async () => {
     setLoading(true);
+    setError(null); 
     let url = '';
 
     try {
@@ -51,6 +57,10 @@ const App = () => {
       }
       
       const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Falha na resposta da rede.');
+      }
+
       const data = await response.json();
 
       if (data && data.results) {
@@ -58,8 +68,9 @@ const App = () => {
         setTotalPages(data.total_pages || 1);
         setPage(1);
       }
-    } catch (error) {
-      console.error('Erro ao buscar filmes:', error);
+    } catch (err) {
+      console.error('Erro ao buscar filmes:', err);
+      setError('Ops! Algo deu errado ao carregar os filmes. Verifique sua conexão e tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -72,8 +83,8 @@ const App = () => {
 
     setLoadingMore(true);
     const nextPage = page + 1;
-
     let url = '';
+
     try {
       if (debouncedQuery) {
         url = `${API_URL}/search/movie?api_key=${API_KEY}&language=${LANGUAGE}&query=${debouncedQuery}&page=${nextPage}`;
@@ -82,14 +93,19 @@ const App = () => {
       }
       
       const response = await fetch(url);
+       if (!response.ok) {
+        throw new Error('Falha na resposta da rede ao carregar mais.');
+      }
+      
+
       const data = await response.json();
 
       if (data && data.results) {
         setMovies(prevMovies => [...prevMovies, ...data.results]);
         setPage(nextPage); 
       }
-    } catch (error) {
-      console.error('Erro ao carregar mais filmes:', error);
+    } catch (err) {
+      console.error('Erro ao carregar mais filmes:', err);
     } finally {
       setLoadingMore(false);
     }
@@ -130,6 +146,18 @@ const App = () => {
         <StatusBar barStyle="light-content" />
         <ActivityIndicator size="large" color={COLOUR_RED} />
         <Text style={styles.loadingText}>Carregando filmes...</Text>
+      </SafeAreaView>
+    );
+  }
+
+   if (error) {
+    return (
+      <SafeAreaView style={styles.errorContainer}>
+        <StatusBar barStyle="light-content" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchMovies}>
+          <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
@@ -226,6 +254,30 @@ const styles = StyleSheet.create({
   },
   footerLoading: {
     paddingVertical: 20,
+  },
+  errorContainer: {
+    flex: 1,
+    backgroundColor: COLOUR_BACKGROUND,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: TEXT_GRAY,
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: COLOUR_RED,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: TEXT_WHITE,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
